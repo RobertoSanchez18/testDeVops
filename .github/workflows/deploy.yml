@@ -37,7 +37,6 @@ jobs:
     # 6. Configure Kubernetes with the KUBECONFIG secret
     - name: Set up kubeconfig
       run: |
-        mkdir -p $HOME/.kube
         echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
         
 
