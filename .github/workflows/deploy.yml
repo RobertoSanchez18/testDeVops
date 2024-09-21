@@ -1,0 +1,48 @@
+name: Dockerize and Deploy to Kubernetes
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 2. Log in to Docker Hub
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    # 3. Build the Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-static-websit:${{ github.sha }} .
+    
+    # 4. Push the Docker image to Docker Hub
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-static-website:${{ github.sha }}
+    
+    # 5. Setup kubectl (instala kubectl en el runner de GitHub Actions)
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.31.0'
+
+    # 6. Configure Kubernetes with the KUBECONFIG secret
+    - name: Set up kubeconfig
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+        
+
+    # 7. Update Kubernetes deployment
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl set image deployment/my-app-deployment my-app-container=${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+        kubectl rollout status deployment/my-app-deployment
