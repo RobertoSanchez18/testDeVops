@@ -34,13 +34,17 @@ jobs:
       with:
         version: 'v1.31.0'
 
-    # 6. Configure Kubernetes with the KUBECONFIG secret
+    # 6. Create the .kube directory
+    - name: Create .kube directory
+      run: mkdir -p $HOME/.kube
+
+    # 7. Configure Kubernetes with the KUBECONFIG secret
     - name: Set up kubeconfig
       run: |
         echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
         
 
-    # 7. Update Kubernetes deployment
+    # 8. Update Kubernetes deployment
     - name: Deploy to Kubernetes
       run: |
         kubectl set image deployment/my-app-deployment my-app-container=${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
